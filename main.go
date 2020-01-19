@@ -96,7 +96,7 @@ func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 		// Barcode
 		pdf.ImageOptions(
 			filenameBC,
-			1, 1,
+			0, 1,
 			42, 5,
 			false,
 			gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true},
