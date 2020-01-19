@@ -5,6 +5,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"image/jpeg"
 	"io/ioutil"
 	"os"
@@ -12,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/oliamb/cutter"
 
 	"github.com/jung-kurt/gofpdf"
 	log "github.com/sirupsen/logrus"
@@ -21,9 +24,9 @@ import (
 	"github.com/paypal/gatt"
 	"github.com/paypal/gatt/examples/option"
 
-	cups "github.com/adrianfalleiro/go-cups"
 	"github.com/boombuler/barcode"
-	bc "github.com/boombuler/barcode/code39"
+
+	bc "github.com/boombuler/barcode/code93"
 	"github.com/boombuler/barcode/qr"
 )
 
@@ -31,7 +34,7 @@ var isPoweredOn = false
 var scanMutex = sync.Mutex{}
 var bleAddr string
 
-var printers *cups.Connection
+var dryRun *bool
 
 func beginScan(d gatt.Device) {
 	scanMutex.Lock()
@@ -66,6 +69,7 @@ func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 		log.Info("Skipping previously printed beacon....")
 		return
 	}
+	// only print the really close ones
 	if rssi > -35 {
 		bleAddr = p.ID()
 
@@ -89,16 +93,18 @@ func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 		pdf.CellFormat(0, 0, text, "0", 0, "LB", false, 0, "")
 
 		// ImageOptions(src, x, y, width, height, flow, options, link, linkStr)
+		// Barcode
 		pdf.ImageOptions(
 			filenameBC,
 			1, 1,
-			46, 5,
+			42, 5,
 			false,
 			gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true},
 			0,
 			"",
 		)
 
+		// QRCode
 		pdf.ImageOptions(
 			filenameQR,
 			70, 1,
@@ -110,16 +116,23 @@ func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 		)
 
 		err := pdf.OutputFileAndClose("/tmp/oink.pdf")
-		cmd := exec.Command("lp", "/tmp/oink.pdf")
-		var out bytes.Buffer
-		cmd.Stdout = &out
-		err = cmd.Run()
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Infof("Done printing barcode %s", out.String())
-		if err != nil {
-			panic(err)
+		if !*dryRun {
+			cmd := exec.Command("lp", "/tmp/oink.pdf")
+			var out bytes.Buffer
+			cmd.Stdout = &out
+			err = cmd.Run()
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Infof("Done printing barcode %s", out.String())
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			log.Info("Dry run - skipping printing.")
 		}
 	}
 }
@@ -127,14 +140,28 @@ func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 func makeCode39(text string) string {
 	filename := "barcode.jpg"
 	// Create the barcode
-	bCode, err := bc.Encode(text, false, false)
+	// Code39
+	//bCode, err := bc.Encode(text, false, false)
+
+	// Code93
+	bCode, err := bc.Encode(text, true, false)
+
 	if err != nil {
 		panic(err)
 	}
 
 	// Scale the barcode to 200x200 pixels
 	bCode2, err := barcode.Scale(bCode, 200, 5)
+	if err != nil {
+		panic(err)
+	}
 
+	// Crop it
+	bCode3, err := cutter.Crop(bCode2, cutter.Config{
+		Width:  148,
+		Height: 5,
+		Mode:   cutter.Centered, // optional, default value
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -144,7 +171,7 @@ func makeCode39(text string) string {
 	defer file.Close()
 
 	// encode the barcode as png
-	jpeg.Encode(file, bCode2,
+	jpeg.Encode(file, bCode3,
 		&jpeg.Options{
 			Quality: 100,
 		})
@@ -160,7 +187,7 @@ func makeQR(text string) string {
 	}
 
 	// Scale the barcode to 200x200 pixels
-	bCode2, err := barcode.Scale(bCode, 140, 140)
+	bCode2, err := barcode.Scale(bCode, 800, 800)
 
 	if err != nil {
 		panic(err)
@@ -180,22 +207,22 @@ func makeQR(text string) string {
 
 func main() {
 
+	dryRun = flag.Bool("n", false, "Dry run - don't print")
+	displayHelp := flag.Bool("h", false, "Display this help.")
+	flag.Parse()
+
+	if *displayHelp {
+		flag.PrintDefaults()
+		return
+	}
+
 	// Supress extraneous log output from GATT
 	stdlog.SetOutput(ioutil.Discard)
-
-	//dataChan = make(chan string, 1)
 
 	log.SetFormatter(&log.TextFormatter{
 		DisableColors: false,
 		FullTimestamp: true,
 	})
-
-	printers = cups.NewDefaultConnection()
-	for _, dest := range printers.Dests {
-		log.Infof("%v (%v)\n", dest.Name, dest.Status())
-	}
-
-	log.Infof("Options %+v", printers.Dests[0])
 
 	log.SetFormatter(&log.TextFormatter{})
 
@@ -209,9 +236,6 @@ func main() {
 	d.Handle(gatt.PeripheralDiscovered(onPeriphDiscovered))
 	d.Init(onStateChanged)
 	log.Info("Done setting up Bluetooth handlers.")
-
-	//	text := strings.Replace("AA:FF:DD:99", ":", "", -1)
-	//fmt.Printf("Text %s\n", text)
 
 	// waiting
 	select {}
