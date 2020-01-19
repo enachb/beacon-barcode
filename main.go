@@ -1,9 +1,14 @@
 package main
 
+// Install cups package
+// sudo apt-get install libcups2-dev
+
 import (
+	"bytes"
 	"image/jpeg"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 	"time"
@@ -16,6 +21,7 @@ import (
 	"github.com/paypal/gatt"
 	"github.com/paypal/gatt/examples/option"
 
+	cups "github.com/adrianfalleiro/go-cups"
 	"github.com/boombuler/barcode"
 	bc "github.com/boombuler/barcode/code39"
 	"github.com/boombuler/barcode/qr"
@@ -23,6 +29,9 @@ import (
 
 var isPoweredOn = false
 var scanMutex = sync.Mutex{}
+var bleAddr string
+
+var printers *cups.Connection
 
 func beginScan(d gatt.Device) {
 	scanMutex.Lock()
@@ -35,7 +44,7 @@ func beginScan(d gatt.Device) {
 }
 
 func onStateChanged(d gatt.Device, s gatt.State) {
-	log.Debugf("State:", s)
+	log.Debugf("State: %s", s)
 	switch s {
 	case gatt.StatePoweredOn:
 		log.Debug("scanning...")
@@ -47,13 +56,18 @@ func onStateChanged(d gatt.Device, s gatt.State) {
 		isPoweredOn = false
 		d.Init(onStateChanged)
 	default:
-		log.Debugf("WARN: unhandled state: ", string(s))
+		log.Debugf("WARN: unhandled state: %s", string(s))
 	}
 }
 
 func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
-	log.Debugf("Peripheral ID:%s, NAME:(%s) power (%d)", p.ID(), p.Name(), a.TxPowerLevel)
-	if rssi < -30 {
+	log.Infof("Peripheral ID:%s, NAME:(%s) rssi (%d)", p.ID(), p.Name(), rssi)
+	if p.ID() == bleAddr && bleAddr != "" {
+		log.Info("Skipping previously printed beacon....")
+		return
+	}
+	if rssi > -35 {
+		bleAddr = p.ID()
 
 		text := strings.Replace(p.ID(), ":", "", -1)
 		log.Infof("Found new beacon: %s rssi:%d", p.ID(), rssi)
@@ -78,7 +92,7 @@ func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 		pdf.ImageOptions(
 			filenameBC,
 			1, 1,
-			35, 5,
+			46, 5,
 			false,
 			gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true},
 			0,
@@ -95,8 +109,15 @@ func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 			"",
 		)
 
-		err := pdf.OutputFileAndClose("oink.pdf")
-		log.Info("Done printing barcode")
+		err := pdf.OutputFileAndClose("/tmp/oink.pdf")
+		cmd := exec.Command("lp", "/tmp/oink.pdf")
+		var out bytes.Buffer
+		cmd.Stdout = &out
+		err = cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Infof("Done printing barcode %s", out.String())
 		if err != nil {
 			panic(err)
 		}
@@ -106,13 +127,13 @@ func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 func makeCode39(text string) string {
 	filename := "barcode.jpg"
 	// Create the barcode
-	bCode, err := bc.Encode(text, true, true)
+	bCode, err := bc.Encode(text, false, false)
 	if err != nil {
 		panic(err)
 	}
 
 	// Scale the barcode to 200x200 pixels
-	bCode2, err := barcode.Scale(bCode, 142, 5)
+	bCode2, err := barcode.Scale(bCode, 200, 5)
 
 	if err != nil {
 		panic(err)
@@ -169,6 +190,13 @@ func main() {
 		FullTimestamp: true,
 	})
 
+	printers = cups.NewDefaultConnection()
+	for _, dest := range printers.Dests {
+		log.Infof("%v (%v)\n", dest.Name, dest.Status())
+	}
+
+	log.Infof("Options %+v", printers.Dests[0])
+
 	log.SetFormatter(&log.TextFormatter{})
 
 	d, err := gatt.NewDevice(option.DefaultClientOptions...)
@@ -180,6 +208,7 @@ func main() {
 	// Register handlers.
 	d.Handle(gatt.PeripheralDiscovered(onPeriphDiscovered))
 	d.Init(onStateChanged)
+	log.Info("Done setting up Bluetooth handlers.")
 
 	//	text := strings.Replace("AA:FF:DD:99", ":", "", -1)
 	//fmt.Printf("Text %s\n", text)
