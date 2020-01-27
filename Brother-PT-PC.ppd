@@ -1,0 +1,360 @@
+*PPD-Adobe: "4.3"
+*%
+*% For information on using this, and to obtain the required backend
+*% script, consult http://www.openprinting.org/
+*%
+*% This file is published under the GNU General Public License
+*%
+*% PPD-O-MATIC (4.0.0 or newer) generated this PPD file. It is for use with 
+*% all programs and environments which use PPD files for dealing with
+*% printer capability information. The printer must be configured with the
+*% "foomatic-rip" backend filter script of Foomatic 4.0.0 or newer. This 
+*% file and "foomatic-rip" work together to support PPD-controlled printer
+*% driver option access with all supported printer drivers and printing
+*% spoolers.
+*%
+*% To save this file on your disk, wait until the download has completed
+*% (the animation of the browser logo must stop) and then use the
+*% "Save as..." command in the "File" menu of your browser or in the 
+*% pop-up manu when you click on this document with the right mouse button.
+*% DO NOT cut and paste this file into an editor with your mouse. This can
+*% introduce additional line breaks which lead to unexpected results.
+*%
+*% You may save this file as 'Brother-PT-2420PC-ptouch.ppd'
+*%
+*%
+*FormatVersion:	"4.3"
+*FileVersion:	"1.1"
+*LanguageVersion: English 
+*LanguageEncoding: ISOLatin1
+*PCFileName:	"BR2420PT.PPD"
+*Manufacturer:	"Brother"
+*Product:	"(2420PC)"
+*cupsVersion:	1.0
+*cupsManualCopies: True
+*cupsModelNumber:  2
+*cupsFilter:	"application/vnd.cups-postscript 100 foomatic-rip"
+*cupsFilter:	"application/vnd.cups-pdf 0 foomatic-rip"
+*%pprRIP:        foomatic-rip other
+*ModelName:     "Brother PT-2420PC"
+*ShortNickName: "Brother PT-2420PC ptouch"
+*NickName:      "Brother PT-2420PC Foomatic/ptouch (recommended)"
+*PSVersion:	"(3010.000) 550"
+*PSVersion:	"(3010.000) 651"
+*PSVersion:	"(3010.000) 652"
+*PSVersion:	"(3010.000) 653"
+*PSVersion:	"(3010.000) 704"
+*PSVersion:	"(3010.000) 705"
+*PSVersion:	"(3010.000) 800"
+*PSVersion:	"(3010.000) 815"
+*PSVersion:	"(3010.000) 850"
+*PSVersion:	"(3010.000) 860"
+*PSVersion:	"(3010.000) 861"
+*PSVersion:	"(3010.000) 862"
+*PSVersion:	"(3010.000) 863"
+*PSVersion:	"(3010.000) 864"
+*PSVersion:	"(3010.000) 870"
+*LanguageLevel:	"3"
+*ColorDevice:	False
+*DefaultColorSpace: Gray
+*FileSystem:	False
+*Throughput:	"1"
+*LandscapeOrientation: Plus90
+*TTRasterizer:	Type42
+*1284DeviceID: "MFG:Brother;MDL:2420PC;CMD:PT-CBP;DRV:Dptouch,R1,M0,TF;"
+
+*driverName ptouch: ""
+*driverType F/Filter: ""
+*driverObsolete: False
+
+
+
+
+*HWMargins: 0 0 0 0
+*VariablePaperSize: True
+*MaxMediaWidth: 100000
+*MaxMediaHeight: 100000
+*NonUIOrderDependency: 100 AnySetup *CustomPageSize
+*CustomPageSize True: "pop pop pop
+<</PageSize [ 5 -2 roll ] /ImagingBBox null>>setpagedevice"
+*End
+*ParamCustomPageSize Width: 1 points 36 100000
+*ParamCustomPageSize Height: 2 points 36 100000
+*ParamCustomPageSize Orientation: 3 int 0 0
+*ParamCustomPageSize WidthOffset: 4 points 0 0
+*ParamCustomPageSize HeightOffset: 5 points 0 0
+
+*FoomaticIDs: Brother-PT-2420PC ptouch
+*FoomaticRIPCommandLine: "gs -q -dBATCH -dPARANOIDSAFER -dQUIET -dNOPA&&
+USE -dNOINTERPOLATE -sDEVICE=cups %A%Z -sOutputFile=- - | rastertoptch&&
+ dummyjob dummyuser dummytitle 1 &apos;%B&apos;"
+*End
+
+*OpenGroup: General/General
+
+*OpenUI *PageSize/Page Size: PickOne
+*OrderDependency: 100 AnySetup *PageSize
+*DefaultPageSize: 12x100mm
+*PageSize 6x100mm/(6 x 100mm): "<</PageSize[17 283]/ImagingBBox null/MediaType (roll)>>setpagedevice"
+*PageSize 9x100mm/(9 x 100mm): "<</PageSize[26 283]/ImagingBBox null/MediaType (roll)>>setpagedevice"
+*PageSize 12x100mm/(12 x 100mm): "<</PageSize[34 283]/ImagingBBox null/MediaType (roll)>>setpagedevice"
+*PageSize 18x100mm/(18 x 100mm): "<</PageSize[51 283]/ImagingBBox null/MediaType (roll)>>setpagedevice"
+*PageSize 24x100mm/(24 x 100mm): "<</PageSize[68 283]/ImagingBBox null/MediaType (roll)>>setpagedevice"
+*CloseUI: *PageSize
+
+*OpenUI *PageRegion: PickOne
+*OrderDependency: 100 AnySetup *PageRegion
+*DefaultPageRegion: 12x100mm
+*PageRegion 6x100mm/(6 x 100mm): "<</PageSize[17 283]/ImagingBBox null/MediaType (roll)>>setpagedevice"
+*PageRegion 9x100mm/(9 x 100mm): "<</PageSize[26 283]/ImagingBBox null/MediaType (roll)>>setpagedevice"
+*PageRegion 12x100mm/(12 x 100mm): "<</PageSize[34 283]/ImagingBBox null/MediaType (roll)>>setpagedevice"
+*PageRegion 18x100mm/(18 x 100mm): "<</PageSize[51 283]/ImagingBBox null/MediaType (roll)>>setpagedevice"
+*PageRegion 24x100mm/(24 x 100mm): "<</PageSize[68 283]/ImagingBBox null/MediaType (roll)>>setpagedevice"
+*CloseUI: *PageRegion
+
+*DefaultImageableArea: 12x100mm
+*ImageableArea 6x100mm/(6 x 100mm): "0 0 17 283"
+*ImageableArea 9x100mm/(9 x 100mm): "0 0 26 283"
+*ImageableArea 12x100mm/(12 x 100mm): "0 0 34 283"
+*ImageableArea 18x100mm/(18 x 100mm): "0 0 51 283"
+*ImageableArea 24x100mm/(24 x 100mm): "0 0 68 283"
+
+*DefaultPaperDimension: 12x100mm
+*PaperDimension 6x100mm/(6 x 100mm): "17 283"
+*PaperDimension 9x100mm/(9 x 100mm): "26 283"
+*PaperDimension 12x100mm/(12 x 100mm): "34 283"
+*PaperDimension 18x100mm/(18 x 100mm): "51 283"
+*PaperDimension 24x100mm/(24 x 100mm): "68 283"
+
+*FoomaticRIPOption Resolution: enum CmdLine A 100
+*FoomaticRIPOptionSetting Resolution=180dpi: " -r180x180"
+
+*OpenUI *PrintQuality/Print Quality: PickOne
+*FoomaticRIPOption PrintQuality: enum CmdLine B
+*OrderDependency: 110 AnySetup *PrintQuality
+*DefaultPrintQuality: High
+*PrintQuality High/High quality: "%% FoomaticRIPOptionSetting: PrintQuality=High"
+*FoomaticRIPOptionSetting PrintQuality=High: " PrintQuality=High "
+*PrintQuality Fast/Fast printing: "%% FoomaticRIPOptionSetting: PrintQuality=Fast"
+*FoomaticRIPOptionSetting PrintQuality=Fast: " PrintQuality=Fast "
+*CloseUI: *PrintQuality
+
+*OpenUI *ConcatPages/Concatenate Pages: Boolean
+*FoomaticRIPOption ConcatPages: bool CmdLine B
+*FoomaticRIPOptionSetting ConcatPages: " ConcatPages "
+*OrderDependency: 110 AnySetup *ConcatPages
+*DefaultConcatPages: False
+*ConcatPages True/ConcatPages: "%% FoomaticRIPOptionSetting: ConcatPages=True"
+*ConcatPages False/IndividualPages: "%% FoomaticRIPOptionSetting: ConcatPages=False"
+*CloseUI: *ConcatPages
+
+*OpenUI *MirrorPrint/Mirror Print: Boolean
+*OrderDependency: 110 AnySetup *MirrorPrint
+*DefaultMirrorPrint: False
+*MirrorPrint True/MirrorPrint: "<</MirrorPrint true>>setpagedevice"
+*MirrorPrint False/Normal: ""
+*CloseUI: *MirrorPrint
+
+*OpenUI *NegativePrint/Negative Print: Boolean
+*OrderDependency: 110 AnySetup *NegativePrint
+*DefaultNegativePrint: False
+*NegativePrint True/NegativePrint: "<</NegativePrint true>>setpagedevice"
+*NegativePrint False/PositivePrint: ""
+*CloseUI: *NegativePrint
+
+*OpenUI *PrintDensity/Print Density: PickOne
+*FoomaticRIPOption PrintDensity: enum CmdLine B
+*OrderDependency: 110 AnySetup *PrintDensity
+*DefaultPrintDensity: 0PrinterDefault
+*PrintDensity 0PrinterDefault/Use printer default: "%% FoomaticRIPOptionSetting: PrintDensity=0PrinterDefault"
+*FoomaticRIPOptionSetting PrintDensity=0PrinterDefault: " PrintDensity&&
+=0 "
+*End
+*PrintDensity 1VeryLight/Very light: "%% FoomaticRIPOptionSetting: PrintDensity=1VeryLight"
+*FoomaticRIPOptionSetting PrintDensity=1VeryLight: " PrintDensity=1 "
+*PrintDensity 2Light/Light: "%% FoomaticRIPOptionSetting: PrintDensity=2Light"
+*FoomaticRIPOptionSetting PrintDensity=2Light: " PrintDensity=2 "
+*PrintDensity 3Medium/Medium: "%% FoomaticRIPOptionSetting: PrintDensity=3Medium"
+*FoomaticRIPOptionSetting PrintDensity=3Medium: " PrintDensity=3 "
+*PrintDensity 4Dark/Dark: "%% FoomaticRIPOptionSetting: PrintDensity=4Dark"
+*FoomaticRIPOptionSetting PrintDensity=4Dark: " PrintDensity=4 "
+*PrintDensity 5VeryDark/Very dark: "%% FoomaticRIPOptionSetting: PrintDensity=5VeryDark"
+*FoomaticRIPOptionSetting PrintDensity=5VeryDark: " PrintDensity=5 "
+*CloseUI: *PrintDensity
+
+*OpenUI *RollFedMedia/Roll Fed Media: PickOne
+*OrderDependency: 110 AnySetup *RollFedMedia
+*DefaultRollFedMedia: Roll
+*RollFedMedia Labels/Labels: "<</MediaType (labels)>>setpagedevice"
+*RollFedMedia Roll/Continuous roll: "<</MediaType (roll)>>setpagedevice"
+*CloseUI: *RollFedMedia
+
+*CloseGroup: General
+
+*OpenGroup: Finishing/Finishing
+
+*OpenUI *AdvanceDistance/Advance Distance: PickOne
+*OrderDependency: 110 AnySetup *AdvanceDistance
+*DefaultAdvanceDistance: 0None
+*AdvanceDistance 0None/None: "<</AdvanceDistance 0>>setpagedevice"
+*AdvanceDistance 1Small/Small: "<</AdvanceDistance 22>>setpagedevice"
+*AdvanceDistance 2Medium/Medium: "<</AdvanceDistance 34>>setpagedevice"
+*AdvanceDistance 3Large/Large: "<</AdvanceDistance 74>>setpagedevice"
+*CloseUI: *AdvanceDistance
+
+*OpenUI *CutMark/Cut Mark: PickOne
+*OrderDependency: 110 AnySetup *CutMark
+*DefaultCutMark: Off
+*CutMark JobEnd/Print cut mark at the end of the job: "<</CutMedia 2>>setpagedevice"
+*CutMark LabelEnd/Print cut mark after each label: "<</CutMedia 4>>setpagedevice"
+*CutMark Off/Do not print cut marks: "<</CutMedia 0>>setpagedevice"
+*CloseUI: *CutMark
+
+*CloseGroup: Finishing
+
+*OpenGroup: PrinterSpecifics/Printer Specifics
+
+*OpenUI *Align/Align: PickOne
+*FoomaticRIPOption Align: enum CmdLine B
+*OrderDependency: 100 AnySetup *Align
+*DefaultAlign: Center
+*Align Center/Center aligned: "%% FoomaticRIPOptionSetting: Align=Center"
+*FoomaticRIPOptionSetting Align=Center: " Align=Center "
+*Align Right/Right aligned: "%% FoomaticRIPOptionSetting: Align=Right"
+*FoomaticRIPOptionSetting Align=Right: " Align=Right "
+*CloseUI: *Align
+
+*OpenUI *BytesPerLine/Bytes Per Line: PickOne
+*FoomaticRIPOption BytesPerLine: int CmdLine B
+*FoomaticRIPOptionPrototype BytesPerLine: " BytesPerLine=%s "
+*FoomaticRIPOptionRange BytesPerLine: 1 255
+*OrderDependency: 100 AnySetup *BytesPerLine
+*DefaultBytesPerLine: 16
+*FoomaticRIPDefaultBytesPerLine: 16
+*BytesPerLine 1/1: "%% FoomaticRIPOptionSetting: BytesPerLine=1"
+*BytesPerLine 5/5: "%% FoomaticRIPOptionSetting: BytesPerLine=5"
+*BytesPerLine 10/10: "%% FoomaticRIPOptionSetting: BytesPerLine=10"
+*BytesPerLine 15/15: "%% FoomaticRIPOptionSetting: BytesPerLine=15"
+*BytesPerLine 16/16: "%% FoomaticRIPOptionSetting: BytesPerLine=16"
+*BytesPerLine 20/20: "%% FoomaticRIPOptionSetting: BytesPerLine=20"
+*BytesPerLine 25/25: "%% FoomaticRIPOptionSetting: BytesPerLine=25"
+*BytesPerLine 30/30: "%% FoomaticRIPOptionSetting: BytesPerLine=30"
+*BytesPerLine 35/35: "%% FoomaticRIPOptionSetting: BytesPerLine=35"
+*BytesPerLine 40/40: "%% FoomaticRIPOptionSetting: BytesPerLine=40"
+*BytesPerLine 45/45: "%% FoomaticRIPOptionSetting: BytesPerLine=45"
+*BytesPerLine 50/50: "%% FoomaticRIPOptionSetting: BytesPerLine=50"
+*BytesPerLine 55/55: "%% FoomaticRIPOptionSetting: BytesPerLine=55"
+*BytesPerLine 60/60: "%% FoomaticRIPOptionSetting: BytesPerLine=60"
+*BytesPerLine 65/65: "%% FoomaticRIPOptionSetting: BytesPerLine=65"
+*BytesPerLine 70/70: "%% FoomaticRIPOptionSetting: BytesPerLine=70"
+*BytesPerLine 75/75: "%% FoomaticRIPOptionSetting: BytesPerLine=75"
+*BytesPerLine 80/80: "%% FoomaticRIPOptionSetting: BytesPerLine=80"
+*BytesPerLine 85/85: "%% FoomaticRIPOptionSetting: BytesPerLine=85"
+*BytesPerLine 90/90: "%% FoomaticRIPOptionSetting: BytesPerLine=90"
+*BytesPerLine 95/95: "%% FoomaticRIPOptionSetting: BytesPerLine=95"
+*BytesPerLine 100/100: "%% FoomaticRIPOptionSetting: BytesPerLine=100"
+*BytesPerLine 105/105: "%% FoomaticRIPOptionSetting: BytesPerLine=105"
+*BytesPerLine 110/110: "%% FoomaticRIPOptionSetting: BytesPerLine=110"
+*BytesPerLine 115/115: "%% FoomaticRIPOptionSetting: BytesPerLine=115"
+*BytesPerLine 120/120: "%% FoomaticRIPOptionSetting: BytesPerLine=120"
+*BytesPerLine 125/125: "%% FoomaticRIPOptionSetting: BytesPerLine=125"
+*BytesPerLine 130/130: "%% FoomaticRIPOptionSetting: BytesPerLine=130"
+*BytesPerLine 135/135: "%% FoomaticRIPOptionSetting: BytesPerLine=135"
+*BytesPerLine 140/140: "%% FoomaticRIPOptionSetting: BytesPerLine=140"
+*BytesPerLine 145/145: "%% FoomaticRIPOptionSetting: BytesPerLine=145"
+*BytesPerLine 150/150: "%% FoomaticRIPOptionSetting: BytesPerLine=150"
+*BytesPerLine 155/155: "%% FoomaticRIPOptionSetting: BytesPerLine=155"
+*BytesPerLine 160/160: "%% FoomaticRIPOptionSetting: BytesPerLine=160"
+*BytesPerLine 165/165: "%% FoomaticRIPOptionSetting: BytesPerLine=165"
+*BytesPerLine 170/170: "%% FoomaticRIPOptionSetting: BytesPerLine=170"
+*BytesPerLine 175/175: "%% FoomaticRIPOptionSetting: BytesPerLine=175"
+*BytesPerLine 180/180: "%% FoomaticRIPOptionSetting: BytesPerLine=180"
+*BytesPerLine 185/185: "%% FoomaticRIPOptionSetting: BytesPerLine=185"
+*BytesPerLine 190/190: "%% FoomaticRIPOptionSetting: BytesPerLine=190"
+*BytesPerLine 195/195: "%% FoomaticRIPOptionSetting: BytesPerLine=195"
+*BytesPerLine 200/200: "%% FoomaticRIPOptionSetting: BytesPerLine=200"
+*BytesPerLine 205/205: "%% FoomaticRIPOptionSetting: BytesPerLine=205"
+*BytesPerLine 210/210: "%% FoomaticRIPOptionSetting: BytesPerLine=210"
+*BytesPerLine 215/215: "%% FoomaticRIPOptionSetting: BytesPerLine=215"
+*BytesPerLine 220/220: "%% FoomaticRIPOptionSetting: BytesPerLine=220"
+*BytesPerLine 225/225: "%% FoomaticRIPOptionSetting: BytesPerLine=225"
+*BytesPerLine 230/230: "%% FoomaticRIPOptionSetting: BytesPerLine=230"
+*BytesPerLine 235/235: "%% FoomaticRIPOptionSetting: BytesPerLine=235"
+*BytesPerLine 240/240: "%% FoomaticRIPOptionSetting: BytesPerLine=240"
+*BytesPerLine 245/245: "%% FoomaticRIPOptionSetting: BytesPerLine=245"
+*BytesPerLine 250/250: "%% FoomaticRIPOptionSetting: BytesPerLine=250"
+*BytesPerLine 255/255: "%% FoomaticRIPOptionSetting: BytesPerLine=255"
+*CloseUI: *BytesPerLine
+
+*CustomBytesPerLine True: " pop "
+*ParamCustomBytesPerLine BytesPerLine/Bytes Per Line: 1 int 1 255
+
+
+*FoomaticRIPOption PixelTransfer: enum CmdLine B 100
+*FoomaticRIPOptionSetting PixelTransfer=RunLengthEncoding: " PixelXfer&&
+=RLE "
+*End
+
+*FoomaticRIPOption TransferMode: enum CmdLine B 100
+*FoomaticRIPOptionSetting TransferMode=1: " TransferMode=1 "
+
+*OpenUI *LabelPreamble/Label Preamble: Boolean
+*FoomaticRIPOption LabelPreamble: bool CmdLine B
+*FoomaticRIPOptionSetting LabelPreamble: " LabelPreamble "
+*OrderDependency: 110 AnySetup *LabelPreamble
+*DefaultLabelPreamble: False
+*LabelPreamble True/LabelPreamble: "%% FoomaticRIPOptionSetting: LabelPreamble=True"
+*LabelPreamble False/noLabelPreamble: "%% FoomaticRIPOptionSetting: LabelPreamble=False"
+*CloseUI: *LabelPreamble
+
+*OpenUI *SoftwareMirror/Software Mirror: Boolean
+*FoomaticRIPOption SoftwareMirror: bool CmdLine B
+*FoomaticRIPOptionSetting SoftwareMirror: " SoftwareMirror "
+*OrderDependency: 110 AnySetup *SoftwareMirror
+*DefaultSoftwareMirror: False
+*SoftwareMirror True/SoftwareMirror: "%% FoomaticRIPOptionSetting: SoftwareMirror=True"
+*SoftwareMirror False/HardwareMirror: "%% FoomaticRIPOptionSetting: SoftwareMirror=False"
+*CloseUI: *SoftwareMirror
+
+*CloseGroup: PrinterSpecifics
+
+
+*% Generic boilerplate PPD stuff as standard PostScript fonts and so on
+
+*DefaultFont: Courier
+*Font AvantGarde-Book: Standard "(001.006S)" Standard ROM
+*Font AvantGarde-BookOblique: Standard "(001.006S)" Standard ROM
+*Font AvantGarde-Demi: Standard "(001.007S)" Standard ROM
+*Font AvantGarde-DemiOblique: Standard "(001.007S)" Standard ROM
+*Font Bookman-Demi: Standard "(001.004S)" Standard ROM
+*Font Bookman-DemiItalic: Standard "(001.004S)" Standard ROM
+*Font Bookman-Light: Standard "(001.004S)" Standard ROM
+*Font Bookman-LightItalic: Standard "(001.004S)" Standard ROM
+*Font Courier: Standard "(002.004S)" Standard ROM
+*Font Courier-Bold: Standard "(002.004S)" Standard ROM
+*Font Courier-BoldOblique: Standard "(002.004S)" Standard ROM
+*Font Courier-Oblique: Standard "(002.004S)" Standard ROM
+*Font Helvetica: Standard "(001.006S)" Standard ROM
+*Font Helvetica-Bold: Standard "(001.007S)" Standard ROM
+*Font Helvetica-BoldOblique: Standard "(001.007S)" Standard ROM
+*Font Helvetica-Narrow: Standard "(001.006S)" Standard ROM
+*Font Helvetica-Narrow-Bold: Standard "(001.007S)" Standard ROM
+*Font Helvetica-Narrow-BoldOblique: Standard "(001.007S)" Standard ROM
+*Font Helvetica-Narrow-Oblique: Standard "(001.006S)" Standard ROM
+*Font Helvetica-Oblique: Standard "(001.006S)" Standard ROM
+*Font NewCenturySchlbk-Bold: Standard "(001.009S)" Standard ROM
+*Font NewCenturySchlbk-BoldItalic: Standard "(001.007S)" Standard ROM
+*Font NewCenturySchlbk-Italic: Standard "(001.006S)" Standard ROM
+*Font NewCenturySchlbk-Roman: Standard "(001.007S)" Standard ROM
+*Font Palatino-Bold: Standard "(001.005S)" Standard ROM
+*Font Palatino-BoldItalic: Standard "(001.005S)" Standard ROM
+*Font Palatino-Italic: Standard "(001.005S)" Standard ROM
+*Font Palatino-Roman: Standard "(001.005S)" Standard ROM
+*Font Symbol: Special "(001.007S)" Special ROM
+*Font Times-Bold: Standard "(001.007S)" Standard ROM
+*Font Times-BoldItalic: Standard "(001.009S)" Standard ROM
+*Font Times-Italic: Standard "(001.007S)" Standard ROM
+*Font Times-Roman: Standard "(001.007S)" Standard ROM
+*Font ZapfChancery-MediumItalic: Standard "(001.007S)" Standard ROM
+*Font ZapfDingbats: Special "(001.004S)" Standard ROM
+
