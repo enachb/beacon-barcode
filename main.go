@@ -35,6 +35,8 @@ var scanMutex = sync.Mutex{}
 var bleAddr string
 
 var dryRun *bool
+var printQRCode *bool
+var minRSSI *int
 
 func beginScan(d gatt.Device) {
 	scanMutex.Lock()
@@ -70,7 +72,7 @@ func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 		return
 	}
 	// only print the really close ones
-	if rssi > -35 {
+	if rssi > *minRSSI {
 		bleAddr = p.ID()
 
 		text := strings.Replace(p.ID(), ":", "", -1)
@@ -79,10 +81,17 @@ func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 		filenameBC := makeCode39(text)
 		filenameQR := makeQR(text)
 
+		var length float64
+		if *printQRCode {
+			length = 80
+		} else {
+			length = 42
+		}
+
 		pdf := gofpdf.NewCustom(
 			&gofpdf.InitType{
 				UnitStr:        "mm",
-				Size:           gofpdf.SizeType{Wd: 12, Ht: 80},
+				Size:           gofpdf.SizeType{Wd: 12, Ht: length},
 				FontDirStr:     "",
 				OrientationStr: "L",
 			})
@@ -105,15 +114,17 @@ func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 		)
 
 		// QRCode
-		pdf.ImageOptions(
-			filenameQR,
-			70, 1,
-			10, 10,
-			false,
-			gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true},
-			0,
-			"",
-		)
+		if *printQRCode {
+			pdf.ImageOptions(
+				filenameQR,
+				70, 1,
+				10, 10,
+				false,
+				gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true},
+				0,
+				"",
+			)
+		}
 
 		err := pdf.OutputFileAndClose("/tmp/oink.pdf")
 		if err != nil {
@@ -208,6 +219,8 @@ func makeQR(text string) string {
 func main() {
 
 	dryRun = flag.Bool("n", false, "Dry run - don't print")
+	printQRCode = flag.Bool("q", false, "Print QR Code")
+	minRSSI = flag.Int("r", -20, "Minimun RSSI required for printing.")
 	displayHelp := flag.Bool("h", false, "Display this help.")
 	flag.Parse()
 
