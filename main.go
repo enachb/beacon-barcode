@@ -14,8 +14,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/oliamb/cutter"
-
 	"github.com/jung-kurt/gofpdf"
 	log "github.com/sirupsen/logrus"
 
@@ -26,7 +24,7 @@ import (
 
 	"github.com/boombuler/barcode"
 
-	bc "github.com/boombuler/barcode/code93"
+	bc "github.com/boombuler/barcode/code128"
 	"github.com/boombuler/barcode/qr"
 )
 
@@ -36,6 +34,7 @@ var bleAddr string
 
 var dryRun *bool
 var printQRCode *bool
+var printBarcode *bool
 var minRSSI *int
 
 func beginScan(d gatt.Device) {
@@ -65,6 +64,19 @@ func onStateChanged(d gatt.Device, s gatt.State) {
 	}
 }
 
+func insertNth(s string, n int) string {
+	var buffer bytes.Buffer
+	var n_1 = n - 1
+	var l_1 = len(s) - 1
+	for i, rune := range s {
+		buffer.WriteRune(rune)
+		if i%n == n_1 && i != l_1 {
+			buffer.WriteRune(' ')
+		}
+	}
+	return buffer.String()
+}
+
 func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 	log.Infof("Peripheral ID:%s, NAME:(%s) rssi (%d)", p.ID(), p.Name(), rssi)
 	if p.ID() == bleAddr && bleAddr != "" {
@@ -72,52 +84,61 @@ func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 		return
 	}
 	// only print the really close ones
-	if rssi > *minRSSI {
+	if rssi > *minRSSI && strings.Contains(p.Name(), "Google") {
 		bleAddr = p.ID()
 
-		text := strings.Replace(p.ID(), ":", "", -1)
+		text := strings.ToLower(strings.Replace(p.ID(), ":", "", -1))
 		log.Infof("Found new beacon: %s rssi:%d", p.ID(), rssi)
 
 		filenameBC := makeCode39(text)
 		filenameQR := makeQR(text)
 
-		var length float64
+		// Compute length based on chosen codes
+		var length float64 = 0
 		if *printQRCode {
-			length = 80
-		} else {
-			length = 42
+			length += 15
+		}
+
+		if *printBarcode {
+			length += 43
 		}
 
 		pdf := gofpdf.NewCustom(
 			&gofpdf.InitType{
 				UnitStr:        "mm",
-				Size:           gofpdf.SizeType{Wd: 12, Ht: length},
+				Size:           gofpdf.SizeType{Wd: 12, Ht: 48},
 				FontDirStr:     "",
 				OrientationStr: "L",
 			})
 		//	pdf.AddPage()
-		pdf.SetFont("Arial", "B", 8)
+		pdf.SetFont("Helvetica", "", 9)
 
+		// Not sure why the page doesn't render with no text....
+		if *printQRCode {
+			text = ""
+		}
 		// CellFormat(width, height, text, border, position after, align, fill, link, linkStr)
-		pdf.CellFormat(0, 0, text, "0", 0, "LB", false, 0, "")
+		pdf.CellFormat(1, 1, insertNth(text, 2), "0", 0, "LB", false, 0, "")
 
 		// ImageOptions(src, x, y, width, height, flow, options, link, linkStr)
 		// Barcode
-		pdf.ImageOptions(
-			filenameBC,
-			0, 1,
-			42, 5,
-			false,
-			gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true},
-			0,
-			"",
-		)
+		if *printBarcode {
+			pdf.ImageOptions(
+				filenameBC,
+				0, 1,
+				51, 5,
+				false,
+				gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true, AllowNegativePosition: true},
+				0,
+				"",
+			)
+		}
 
 		// QRCode
 		if *printQRCode {
 			pdf.ImageOptions(
 				filenameQR,
-				70, 1,
+				1, 1,
 				10, 10,
 				false,
 				gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true},
@@ -138,7 +159,7 @@ func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 			if err != nil {
 				log.Fatal(err)
 			}
-			log.Infof("Done printing barcode %s", out.String())
+			log.Infof("**************** Done printing barcode %s", out.String())
 			if err != nil {
 				panic(err)
 			}
@@ -149,40 +170,40 @@ func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 }
 
 func makeCode39(text string) string {
-	filename := "barcode.jpg"
+	filename := "/tmp/barcode.jpg"
 	// Create the barcode
 	// Code39
 	//bCode, err := bc.Encode(text, false, false)
 
-	// Code93
-	bCode, err := bc.Encode(text, true, false)
+	// Code128
+	bCode, err := bc.Encode(text) //, true, false)
 
 	if err != nil {
 		panic(err)
 	}
 
 	// Scale the barcode to 200x200 pixels
-	bCode2, err := barcode.Scale(bCode, 200, 5)
+	bCode2, err := barcode.Scale(bCode, 1000, 100)
 	if err != nil {
 		panic(err)
 	}
 
 	// Crop it
-	bCode3, err := cutter.Crop(bCode2, cutter.Config{
-		Width:  148,
-		Height: 5,
-		Mode:   cutter.Centered, // optional, default value
-	})
-	if err != nil {
-		panic(err)
-	}
+	// bCode2, err := cutter.Crop(bCode2, cutter.Config{
+	// 	Width:  350,
+	// 	Height: 5,
+	// 	Mode:   cutter.Centered, // optional, default value
+	// })
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	// create the output file
 	file, _ := os.Create(filename)
 	defer file.Close()
 
 	// encode the barcode as png
-	jpeg.Encode(file, bCode3,
+	jpeg.Encode(file, bCode2,
 		&jpeg.Options{
 			Quality: 100,
 		})
@@ -220,6 +241,7 @@ func main() {
 
 	dryRun = flag.Bool("n", false, "Dry run - don't print")
 	printQRCode = flag.Bool("q", false, "Print QR Code")
+	printBarcode = flag.Bool("b", false, "Print barode")
 	minRSSI = flag.Int("r", -20, "Minimun RSSI required for printing.")
 	displayHelp := flag.Bool("h", false, "Display this help.")
 	flag.Parse()
