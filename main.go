@@ -41,7 +41,7 @@ func beginScan(d gatt.Device) {
 	scanMutex.Lock()
 	for isPoweredOn {
 		d.Scan(nil, true) //Scan for five seconds and then restart
-		time.Sleep(5 * time.Second)
+		time.Sleep(5 * time.Hour)
 		d.StopScanning()
 	}
 	scanMutex.Unlock()
@@ -71,10 +71,67 @@ func insertNth(s string, n int) string {
 	for i, rune := range s {
 		buffer.WriteRune(rune)
 		if i%n == n_1 && i != l_1 {
-			buffer.WriteRune(' ')
+			buffer.WriteRune('\n')
 		}
 	}
 	return buffer.String()
+}
+
+func createBarcode(addr string, rssi int, printBarcode bool, printQRCode bool) string {
+
+	const fileName = "/tmp/oink.pdf"
+
+	text := strings.ToLower(strings.Replace(addr, ":", "", -1))
+	log.Infof("Found new beacon: %s rssi:%d", addr, rssi)
+
+	filenameQR := makeQR(text)
+
+	// Compute length based on chosen codes
+	var length float64 = 0
+	if printQRCode {
+		length += 15
+	}
+
+	if printBarcode {
+		length += 43
+	}
+
+	pdf := gofpdf.NewCustom(
+		&gofpdf.InitType{
+			UnitStr:        "mm",
+			Size:           gofpdf.SizeType{Wd: 12, Ht: 48},
+			FontDirStr:     "",
+			OrientationStr: "L",
+		})
+	pdf.SetFont("Helvetica", "", 11)
+
+	space := "             "
+	formattedText := insertNth(text, 2)
+	// CellFormat(width, height, text, border, position after, align, fill, link, linkStr)
+	pdf.CellFormat(0, -2, space+formattedText, "0", 0, "LB", false, 0, "")
+	// pdf.CellFormat(0, -0, space+formattedText[6:], "0", 0, "LB", false, 0, "")
+	// pdf.MultiCell(10, -6, "             "+insertNth(text, 2), "0", "LB", false)
+
+	// QRCode
+	if printQRCode {
+		log.Infof("Filename QR: %s", filenameQR)
+		pdf.ImageOptions(
+			filenameQR,
+			1, 1,
+			10, 10,
+			false,
+			gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true},
+			0,
+			"",
+		)
+	}
+
+	err := pdf.OutputFileAndClose(fileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return fileName
 }
 
 func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
@@ -87,75 +144,13 @@ func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 	if rssi > *minRSSI && strings.Contains(p.Name(), "Google") {
 		bleAddr = p.ID()
 
-		text := strings.ToLower(strings.Replace(p.ID(), ":", "", -1))
-		log.Infof("Found new beacon: %s rssi:%d", p.ID(), rssi)
+		fileName := createBarcode(p.ID(), rssi, *printBarcode, *printQRCode)
 
-		filenameBC := makeCode39(text)
-		filenameQR := makeQR(text)
-
-		// Compute length based on chosen codes
-		var length float64 = 0
-		if *printQRCode {
-			length += 15
-		}
-
-		if *printBarcode {
-			length += 43
-		}
-
-		pdf := gofpdf.NewCustom(
-			&gofpdf.InitType{
-				UnitStr:        "mm",
-				Size:           gofpdf.SizeType{Wd: 12, Ht: 48},
-				FontDirStr:     "",
-				OrientationStr: "L",
-			})
-		//	pdf.AddPage()
-		pdf.SetFont("Helvetica", "", 9)
-
-		// Not sure why the page doesn't render with no text....
-		if *printQRCode {
-			text = ""
-		}
-		// CellFormat(width, height, text, border, position after, align, fill, link, linkStr)
-		pdf.CellFormat(1, 1, insertNth(text, 2), "0", 0, "LB", false, 0, "")
-
-		// ImageOptions(src, x, y, width, height, flow, options, link, linkStr)
-		// Barcode
-		if *printBarcode {
-			pdf.ImageOptions(
-				filenameBC,
-				0, 1,
-				51, 5,
-				false,
-				gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true, AllowNegativePosition: true},
-				0,
-				"",
-			)
-		}
-
-		// QRCode
-		if *printQRCode {
-			pdf.ImageOptions(
-				filenameQR,
-				1, 1,
-				10, 10,
-				false,
-				gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true},
-				0,
-				"",
-			)
-		}
-
-		err := pdf.OutputFileAndClose("/tmp/oink.pdf")
-		if err != nil {
-			log.Fatal(err)
-		}
 		if !*dryRun {
-			cmd := exec.Command("lp", "/tmp/oink.pdf")
+			cmd := exec.Command("lp", fileName)
 			var out bytes.Buffer
 			cmd.Stdout = &out
-			err = cmd.Run()
+			err := cmd.Run()
 			if err != nil {
 				log.Fatal(err)
 			}
