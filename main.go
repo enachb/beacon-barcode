@@ -71,7 +71,7 @@ func insertNth(s string, n int) string {
 	for i, rune := range s {
 		buffer.WriteRune(rune)
 		if i%n == n_1 && i != l_1 {
-			buffer.WriteRune('\n')
+			buffer.WriteRune(' ')
 		}
 	}
 	return buffer.String()
@@ -99,26 +99,26 @@ func createBarcode(addr string, rssi int, printBarcode bool, printQRCode bool) s
 	pdf := gofpdf.NewCustom(
 		&gofpdf.InitType{
 			UnitStr:        "mm",
-			Size:           gofpdf.SizeType{Wd: 12, Ht: 48},
+			Size:           gofpdf.SizeType{Wd: 12, Ht: 45},
 			FontDirStr:     "",
 			OrientationStr: "L",
 		})
 	pdf.SetFont("Helvetica", "", 11)
 
-	space := "             "
+	space := "            "
 	formattedText := insertNth(text, 2)
 	// CellFormat(width, height, text, border, position after, align, fill, link, linkStr)
 	pdf.CellFormat(0, -2, space+formattedText, "0", 0, "LB", false, 0, "")
 	// pdf.CellFormat(0, -0, space+formattedText[6:], "0", 0, "LB", false, 0, "")
 	// pdf.MultiCell(10, -6, "             "+insertNth(text, 2), "0", "LB", false)
 
-	// QRCode
+	// qrCode
 	if printQRCode {
 		log.Infof("Filename QR: %s", filenameQR)
 		pdf.ImageOptions(
 			filenameQR,
-			1, 1,
-			10, 10,
+			0.5, 0.5,
+			10.5, 10.5,
 			false,
 			gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true},
 			0,
@@ -214,7 +214,7 @@ func makeQR(text string) string {
 	}
 
 	// Scale the barcode to 200x200 pixels
-	bCode2, err := barcode.Scale(bCode, 800, 800)
+	bCode2, err := barcode.Scale(bCode, 1000, 1000)
 
 	if err != nil {
 		panic(err)
