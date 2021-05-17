@@ -6,7 +6,8 @@ package main
 import (
 	"bytes"
 	"flag"
-	"image/jpeg"
+	"fmt"
+	"image"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -14,9 +15,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/oliamb/cutter"
-
-	"github.com/jung-kurt/gofpdf"
 	log "github.com/sirupsen/logrus"
 
 	stdlog "log"
@@ -26,8 +24,12 @@ import (
 
 	"github.com/boombuler/barcode"
 
-	bc "github.com/boombuler/barcode/code93"
 	"github.com/boombuler/barcode/qr"
+
+	"github.com/fogleman/gg"
+	"github.com/golang/freetype/truetype"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/gofont/gobold"
 )
 
 var isPoweredOn = false
@@ -35,8 +37,25 @@ var scanMutex = sync.Mutex{}
 var bleAddr string
 
 var dryRun *bool
-var printQRCode *bool
 var minRSSI *int
+var face font.Face
+
+var labels chan string
+
+var scanned map[string]int64
+
+func insertNth(s string, n int) string {
+	var buffer bytes.Buffer
+	var n_1 = n - 1
+	var l_1 = len(s) - 1
+	for i, rune := range s {
+		buffer.WriteRune(rune)
+		if i%n == n_1 && i != l_1 {
+			buffer.WriteRune(' ')
+		}
+	}
+	return buffer.String()
+}
 
 func beginScan(d gatt.Device) {
 	scanMutex.Lock()
@@ -66,131 +85,48 @@ func onStateChanged(d gatt.Device, s gatt.State) {
 }
 
 func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
-	log.Infof("Peripheral ID:%s, NAME:(%s) rssi (%d)", p.ID(), p.Name(), rssi)
-	if p.ID() == bleAddr && bleAddr != "" {
-		log.Info("Skipping previously printed beacon....")
+
+	if !strings.Contains(p.Name(), "Google") {
 		return
 	}
+
+	log.Infof("Peripheral ID:%s, NAME:(%s) rssi (%d)", p.ID(), p.Name(), rssi)
+
 	// only print the really close ones
 	if rssi > *minRSSI {
-		bleAddr = p.ID()
-
-		text := strings.Replace(p.ID(), ":", "", -1)
+		text := strings.ToLower(strings.Replace(p.ID(), ":", "", -1))
+		_, exists := scanned[text]
+		if exists {
+			log.Infof("Skipping previously printed beacon: %s", text)
+			return
+		}
 		log.Infof("Found new beacon: %s rssi:%d", p.ID(), rssi)
 
-		filenameBC := makeCode39(text)
-		filenameQR := makeQR(text)
+		img := gg.NewContext(320, 76)
+		img.SetRGB(1, 1, 1)
+		img.Clear()
+		qrImage := makeQR(text)
+		img.DrawImage(qrImage, 0, 0)
+		img.SetFontFace(face)
+		img.SetRGB(0, 0, 0)
+		img.DrawString(insertNth(text, 2), 80, 48)
 
-		var length float64
-		if *printQRCode {
-			length = 80
-		} else {
-			length = 42
-		}
+		imgPath := fmt.Sprintf("/tmp/%s.png", text)
+		img.SavePNG(imgPath)
 
-		pdf := gofpdf.NewCustom(
-			&gofpdf.InitType{
-				UnitStr:        "mm",
-				Size:           gofpdf.SizeType{Wd: 12, Ht: length},
-				FontDirStr:     "",
-				OrientationStr: "L",
-			})
-		//	pdf.AddPage()
-		pdf.SetFont("Arial", "B", 8)
+		scanned[text] = time.Now().Unix()
 
-		// CellFormat(width, height, text, border, position after, align, fill, link, linkStr)
-		pdf.CellFormat(0, 0, text, "0", 0, "LB", false, 0, "")
-
-		// ImageOptions(src, x, y, width, height, flow, options, link, linkStr)
-		// Barcode
-		pdf.ImageOptions(
-			filenameBC,
-			0, 1,
-			42, 5,
-			false,
-			gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true},
-			0,
-			"",
-		)
-
-		// QRCode
-		if *printQRCode {
-			pdf.ImageOptions(
-				filenameQR,
-				70, 1,
-				10, 10,
-				false,
-				gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true},
-				0,
-				"",
-			)
-		}
-
-		err := pdf.OutputFileAndClose("/tmp/oink.pdf")
-		if err != nil {
-			log.Fatal(err)
-		}
 		if !*dryRun {
-			cmd := exec.Command("lp", "/tmp/oink.pdf")
-			var out bytes.Buffer
-			cmd.Stdout = &out
-			err = cmd.Run()
-			if err != nil {
-				log.Fatal(err)
-			}
-			log.Infof("Done printing barcode %s", out.String())
-			if err != nil {
-				panic(err)
-			}
+			labels <- imgPath
 		} else {
 			log.Info("Dry run - skipping printing.")
 		}
+
 	}
 }
 
-func makeCode39(text string) string {
-	filename := "barcode.jpg"
-	// Create the barcode
-	// Code39
-	//bCode, err := bc.Encode(text, false, false)
-
-	// Code93
-	bCode, err := bc.Encode(text, true, false)
-
-	if err != nil {
-		panic(err)
-	}
-
-	// Scale the barcode to 200x200 pixels
-	bCode2, err := barcode.Scale(bCode, 200, 5)
-	if err != nil {
-		panic(err)
-	}
-
-	// Crop it
-	bCode3, err := cutter.Crop(bCode2, cutter.Config{
-		Width:  148,
-		Height: 5,
-		Mode:   cutter.Centered, // optional, default value
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	// create the output file
-	file, _ := os.Create(filename)
-	defer file.Close()
-
-	// encode the barcode as png
-	jpeg.Encode(file, bCode3,
-		&jpeg.Options{
-			Quality: 100,
-		})
-	return filename
-}
-
-func makeQR(text string) string {
-	filename := "qrcode.jpg"
+func makeQR(text string) *image.Gray {
+	// filename := "qrcode.png"
 	// Create the barcode
 	bCode, err := qr.Encode(text, qr.L, qr.Auto)
 	if err != nil {
@@ -198,36 +134,31 @@ func makeQR(text string) string {
 	}
 
 	// Scale the barcode to 200x200 pixels
-	bCode2, err := barcode.Scale(bCode, 800, 800)
-
+	bCode2, err := barcode.Scale(bCode, 76, 76)
 	if err != nil {
 		panic(err)
 	}
 
-	// create the output file
-	file, _ := os.Create(filename)
-	defer file.Close()
+	bounds := bCode2.Bounds()
+	gray := image.NewGray(bounds)
+	for x := 0; x < bounds.Max.X; x++ {
+		for y := 0; y < bounds.Max.Y; y++ {
+			var rgba = bCode2.At(x, y)
+			gray.Set(x, y, rgba)
+		}
+	}
 
-	// encode the barcode as png
-	jpeg.Encode(file, bCode2,
-		&jpeg.Options{
-			Quality: 100,
-		})
-	return filename
+	return gray
 }
 
 func main() {
 
 	dryRun = flag.Bool("n", false, "Dry run - don't print")
-	printQRCode = flag.Bool("q", false, "Print QR Code")
 	minRSSI = flag.Int("r", -20, "Minimun RSSI required for printing.")
-	displayHelp := flag.Bool("h", false, "Display this help.")
 	flag.Parse()
 
-	if *displayHelp {
-		flag.PrintDefaults()
-		return
-	}
+	labels = make(chan string, 100)
+	scanned = make(map[string]int64)
 
 	// Supress extraneous log output from GATT
 	stdlog.SetOutput(ioutil.Discard)
@@ -238,6 +169,18 @@ func main() {
 	})
 
 	log.SetFormatter(&log.TextFormatter{})
+
+	font, err := truetype.Parse(gobold.TTF)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	face = truetype.NewFace(font,
+		&truetype.Options{
+			Size: 11,
+			DPI:  180,
+		},
+	)
 
 	d, err := gatt.NewDevice(option.DefaultClientOptions...)
 	if err != nil {
@@ -250,6 +193,28 @@ func main() {
 	d.Init(onStateChanged)
 	log.Info("Done setting up Bluetooth handlers.")
 
-	// waiting
-	select {}
+	// Printing
+	for l := range labels {
+		//Print
+		if !*dryRun {
+			cmd := exec.Command("./ptouch-print-x86", "--image", l)
+			var out bytes.Buffer
+			cmd.Stdout = &out
+			err := cmd.Run()
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
+			err = os.Remove(l)
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Infof("Done printing barcode %s", out.String())
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			log.Info("Dry run - skipping printing.")
+		}
+
+	}
 }
